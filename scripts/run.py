@@ -154,6 +154,46 @@ def _save_response(response, stem: str, out_dir: Path) -> Path | None:
     return filepath
 
 
+def _build_common_image_kwargs(
+    args: argparse.Namespace, overrides: dict = None
+) -> dict:
+    """Build common kwargs for image.sample calls to reduce repetition."""
+    if overrides is None:
+        overrides = {}
+    kwargs = {
+        "model": args.model,
+        **overrides,
+    }
+    if getattr(args, "aspect_ratio", None) and args.aspect_ratio != "1:1":
+        kwargs["aspect_ratio"] = args.aspect_ratio
+    if getattr(args, "resolution", None):
+        kwargs["resolution"] = args.resolution
+    if getattr(args, "format", None) == "base64":
+        kwargs["image_format"] = "base64"
+    return kwargs
+
+
+def _build_common_video_kwargs(
+    args: argparse.Namespace, overrides: dict = None
+) -> dict:
+    """Build common kwargs for video calls to reduce repetition."""
+    if overrides is None:
+        overrides = {}
+    kwargs = {
+        "model": args.model,
+        **overrides,
+    }
+    if getattr(args, "aspect_ratio", None):
+        kwargs["aspect_ratio"] = args.aspect_ratio
+    if getattr(args, "resolution", None):
+        kwargs["resolution"] = args.resolution
+    if getattr(args, "timeout", None):
+        kwargs["timeout"] = timedelta(seconds=args.timeout)
+    if getattr(args, "poll_interval", None):
+        kwargs["interval"] = timedelta(seconds=args.poll_interval)
+    return kwargs
+
+
 # ---------------------------------------------------------------------------
 # Image subcommands
 # ---------------------------------------------------------------------------
@@ -167,16 +207,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
     out_dir = _prepare_out_dir(args.out_dir)
     client = xai_sdk.Client()
 
-    # API parameters
-    kwargs: dict = {
-        "prompt": args.prompt,
-        "model": args.model,
-        "aspect_ratio": args.aspect_ratio,
-    }
-    if args.resolution:
-        kwargs["resolution"] = args.resolution
-    if args.format == "base64":
-        kwargs["image_format"] = "base64"
+    kwargs = _build_common_image_kwargs(
+        args, {"prompt": args.prompt, "aspect_ratio": args.aspect_ratio}
+    )
 
     count = args.count
     print(
@@ -206,17 +239,7 @@ def cmd_edit(args: argparse.Namespace) -> int:
     # Encode local files as data-URIs; URLs pass through unchanged
     image_uris = [_encode_image(img) for img in args.image]
 
-    # API parameters
-    kwargs: dict = {
-        "prompt": args.prompt,
-        "model": args.model,
-    }
-    if args.aspect_ratio:
-        kwargs["aspect_ratio"] = args.aspect_ratio
-    if args.resolution:
-        kwargs["resolution"] = args.resolution
-    if args.format == "base64":
-        kwargs["image_format"] = "base64"
+    kwargs = _build_common_image_kwargs(args, {"prompt": args.prompt})
 
     # The API uses singular vs plural key depending on image count
     if len(image_uris) == 1:
@@ -240,25 +263,27 @@ def cmd_concurrent(args: argparse.Namespace) -> int:
     out_dir = _prepare_out_dir(args.out_dir)
     source_uri = _encode_image(args.image)
 
+    # Common kwargs for all concurrent calls
+    common = {
+        "model": args.model,
+        "image_url": source_uri,
+    }
+    if args.aspect_ratio and args.aspect_ratio != "1:1":
+        common["aspect_ratio"] = args.aspect_ratio
+    if args.resolution:
+        common["resolution"] = args.resolution
+    if args.format == "base64":
+        common["image_format"] = "base64"
+
     async def _run() -> list:
         client = xai_sdk.AsyncClient()
-        tasks = [
-            client.image.sample(
-                prompt=prompt,
-                model=args.model,
-                image_url=source_uri,
-                **({"aspect_ratio": args.aspect_ratio} if args.aspect_ratio else {}),
-                **({"resolution": args.resolution} if args.resolution else {}),
-                **({"image_format": "base64"} if args.format == "base64" else {}),
-            )
-            for prompt in args.prompt
-        ]
+        tasks = [client.image.sample(prompt=prompt, **common) for prompt in args.prompt]
         return await asyncio.gather(*tasks)
 
     print(f"Running {len(args.prompt)} concurrent edit(s) — model={args.model}")
     results = asyncio.run(_run())
 
-    for i, (prompt, resp) in enumerate(zip(args.prompt, results), 1):
+    for i, (_, resp) in enumerate(zip(args.prompt, results), 1):
         _save_response(resp, _make_stem("style", i), out_dir)
 
     print(f"Done. Output in {out_dir}")
@@ -279,15 +304,9 @@ def cmd_multiturn(args: argparse.Namespace) -> int:
     for i, prompt in enumerate(args.prompt, 1):
         print(f" Step {i}/{len(args.prompt)}: {prompt}")
 
-        kwargs: dict = {
-            "prompt": prompt,
-            "model": args.model,
-            "image_url": current_uri,
-        }
-        if args.aspect_ratio:
-            kwargs["aspect_ratio"] = args.aspect_ratio
-        if args.resolution:
-            kwargs["resolution"] = args.resolution
+        kwargs = _build_common_image_kwargs(
+            args, {"prompt": prompt, "image_url": current_uri}
+        )
         # Force base64 for intermediates so chaining works without re-downloading
         kwargs["image_format"] = "base64"
 
@@ -343,19 +362,9 @@ def cmd_video_generate(args: argparse.Namespace) -> int:
     out_dir = _prepare_out_dir(args.out_dir)
     client = xai_sdk.Client()
 
-    kwargs: dict = {
-        "prompt": args.prompt,
-        "model": args.model,
-        "duration": args.duration,
-    }
-    if args.aspect_ratio:
-        kwargs["aspect_ratio"] = args.aspect_ratio
-    if args.resolution:
-        kwargs["resolution"] = args.resolution
-    if args.timeout:
-        kwargs["timeout"] = timedelta(seconds=args.timeout)
-    if args.poll_interval:
-        kwargs["interval"] = timedelta(seconds=args.poll_interval)
+    kwargs = _build_common_video_kwargs(
+        args, {"prompt": args.prompt, "duration": args.duration}
+    )
 
     # Image-to-video when a source image is provided
     if args.image:
@@ -381,15 +390,9 @@ def cmd_video_edit(args: argparse.Namespace) -> int:
     out_dir = _prepare_out_dir(args.out_dir)
     client = xai_sdk.Client()
 
-    kwargs: dict = {
-        "prompt": args.prompt,
-        "model": args.model,
-        "video_url": args.video,
-    }
-    if args.timeout:
-        kwargs["timeout"] = timedelta(seconds=args.timeout)
-    if args.poll_interval:
-        kwargs["interval"] = timedelta(seconds=args.poll_interval)
+    kwargs = _build_common_video_kwargs(
+        args, {"prompt": args.prompt, "video_url": args.video}
+    )
 
     print(f"Editing video — model={args.model}")
     response = client.video.generate(**kwargs)
@@ -406,15 +409,12 @@ def cmd_video_concurrent(args: argparse.Namespace) -> int:
 
     out_dir = _prepare_out_dir(args.out_dir)
 
+    common = _build_common_video_kwargs(args, {"video_url": args.video})
+
     async def _run() -> list:
         client = xai_sdk.AsyncClient()
         tasks = [
-            client.video.generate(
-                prompt=prompt,
-                model=args.model,
-                video_url=args.video,
-            )
-            for prompt in args.prompt
+            client.video.generate(prompt=prompt, **common) for prompt in args.prompt
         ]
         return await asyncio.gather(*tasks)
 
