@@ -11,6 +11,16 @@ xAI Studio — an [OpenClaw](https://openclaw.ai) skill for generating and editi
 
 ## Quick Start
 
+### Via ClawHub
+
+Install directly with the [ClawHub CLI](https://clawhub.ai/H0llyW00dzZ/xai-studio):
+
+```bash
+clawhub install xai-studio
+```
+
+### Manual Setup
+
 ```bash
 # 1. Clone the skill
 git clone https://github.com/H0llyW00dzZ/xai-studio-skills.git
@@ -18,9 +28,7 @@ cd xai-studio-skills
 
 # 2. Create a virtual environment and install the SDK
 python3 -m venv venv
-source venv/bin/activate
-pip install xai-sdk
-deactivate
+venv/bin/pip install xai-sdk
 
 # 3. Set your API key
 export XAI_API_KEY="xai-..."
@@ -132,7 +140,7 @@ Videos are saved as `.mp4` to `<out-dir>/<date>/<command>_<NNN>_<HHMMSS>.mp4` (e
 
 ## ClawHub
 
-This skill is published on [ClawHub](https://clawhub.ai). Install it directly in your OpenClaw environment:
+This skill is published on [ClawHub](https://clawhub.ai/H0llyW00dzZ/xai-studio). Install it directly in your OpenClaw environment:
 
 ```
 clawhub install xai-studio
