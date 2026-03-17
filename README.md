@@ -28,7 +28,7 @@ cd xai-studio-skills
 
 # 2. Create a virtual environment and install the SDK
 python3 -m venv venv
-venv/bin/pip install xai-sdk
+venv/bin/pip3 install xai-sdk
 
 # 3. Set your API key
 export XAI_API_KEY="xai-..."

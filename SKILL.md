@@ -38,7 +38,7 @@ Create an isolated virtual environment and install the SDK:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install xai-sdk
+pip3 install xai-sdk
 deactivate
 ```
 
