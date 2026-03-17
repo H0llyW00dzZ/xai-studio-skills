@@ -88,13 +88,13 @@ venv/bin/python3 scripts/run.py multi-turn --image photo.png --prompt "Add drama
 
 - `--model`: Model name (default: `grok-imagine-image`)
 - `--aspect-ratio`: e.g. `16:9`, `4:3`, `auto` (default: `1:1`)
-- `--resolution`: `1k` or `2k`
+- `--resolution`: `1k` or `2k` (default: API default)
 - `--format`: `base64` (default) or `url`
 - `--out-dir`: Output directory (default: `media/xai-output`)
 
 ## Output
 
-Images are saved to `<out-dir>/<date>/<command>_<NNN>_<HHMMSS>.<ext>`, organized by date with descriptive filenames (e.g., `generate_001_143052.png`). The file extension is detected automatically from the image content (PNG, JPEG, WebP, GIF).
+Images are saved to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.<ext>`, organized by UTC date. The prefix reflects the subcommand: `generate`, `edit`, `style` (concurrent), or `step` (multi-turn). The file extension is detected automatically from image magic bytes (PNG, JPEG, WebP, GIF).
 
 ---
 
@@ -124,8 +124,9 @@ venv/bin/python3 scripts/run.py video-concurrent --video https://example.com/cli
 
 - `--model`: Model name (default: `grok-imagine-video`)
 - `--duration`: Length in seconds, 1–15 (default: `5`) — generate only
-- `--resolution`: `480p` or `720p`
-- `--timeout`: Max polling wait in seconds (default: 600)
-- `--poll-interval`: Seconds between status checks
+- `--aspect-ratio`: e.g. `16:9` (default: API default)
+- `--resolution`: `480p` or `720p` (default: API default)
+- `--timeout`: Max polling wait in seconds (default: SDK default)
+- `--poll-interval`: Seconds between status checks (default: SDK default)
 
-Videos are saved as `.mp4` to `<out-dir>/<date>/<command>_<NNN>_<HHMMSS>.mp4` (e.g., `video_001_143052.mp4`).
+Videos are saved as `.mp4` to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.mp4`. The prefix reflects the subcommand: `video` (generate), `video_edit`, or `video_style` (concurrent).
