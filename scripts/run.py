@@ -296,6 +296,8 @@ def cmd_concurrent(args: argparse.Namespace) -> int:
     common["image_format"] = "base64"
 
     async def _run() -> list[tuple[int, bytes]]:
+        # Limit concurrency to 4 to avoid overwhelming the API.
+        # TODO: Make this configurable (currently hardcoded to 4 — should be sufficient).
         sem = asyncio.Semaphore(4)
 
         async def _one(idx: int, prompt: str) -> tuple[int, bytes]:
@@ -444,6 +446,8 @@ def cmd_video_concurrent(args: argparse.Namespace) -> int:
     common = _build_common_video_kwargs(args, {"video_url": video_uri})
 
     async def _run() -> list:
+        # Limit concurrency to 4 to avoid overwhelming the API.
+        # TODO: Make this configurable (currently hardcoded to 4 — should be sufficient).
         sem = asyncio.Semaphore(4)
 
         async def _one(prompt: str):
