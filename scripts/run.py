@@ -164,6 +164,16 @@ def _save_response(response, stem: str, out_dir: Path) -> Path | None:
     return filepath
 
 
+def _save_async_image(image_bytes: bytes, stem: str, out_dir: Path) -> Path:
+    """Save pre-resolved image bytes (from an async response) to disk."""
+    ext = _detect_ext(image_bytes)
+    filepath = out_dir / f"{stem}{ext}"
+    with open(filepath, "wb") as f:
+        f.write(image_bytes)
+    print(f" Saved: {filepath}")
+    return filepath
+
+
 def _build_common_image_kwargs(
     args: argparse.Namespace, overrides: dict = None
 ) -> dict:
@@ -282,19 +292,29 @@ def cmd_concurrent(args: argparse.Namespace) -> int:
         common["aspect_ratio"] = args.aspect_ratio
     if args.resolution:
         common["resolution"] = args.resolution
-    if args.format == "base64":
-        common["image_format"] = "base64"
+    # Force base64 so we can resolve image bytes in-process
+    common["image_format"] = "base64"
 
-    async def _run() -> list:
-        client = xai_sdk.AsyncClient()
-        tasks = [client.image.sample(prompt=prompt, **common) for prompt in args.prompt]
+    async def _run() -> list[tuple[int, bytes]]:
+        sem = asyncio.Semaphore(4)
+
+        async def _one(idx: int, prompt: str) -> tuple[int, bytes]:
+            async with sem:
+                async with xai_sdk.AsyncClient() as client:
+                    resp = await client.image.sample(prompt=prompt, **common)
+                    img = await resp.image
+                    return (idx, img)
+
+        tasks = [_one(i, p) for i, p in enumerate(args.prompt, 1)]
         return await asyncio.gather(*tasks)
 
-    print(f"Running {len(args.prompt)} concurrent edit(s) — model={args.model}")
+    print(
+        f"Running {len(args.prompt)} concurrent style transfer(s) — model={args.model}"
+    )
     results = asyncio.run(_run())
 
-    for i, (_, resp) in enumerate(zip(args.prompt, results), 1):
-        _save_response(resp, _make_stem("style", i), out_dir)
+    for idx, img_bytes in results:
+        _save_async_image(img_bytes, _make_stem("style", idx), out_dir)
 
     print(f"Done. Output in {out_dir}")
     return 0
@@ -424,10 +444,14 @@ def cmd_video_concurrent(args: argparse.Namespace) -> int:
     common = _build_common_video_kwargs(args, {"video_url": video_uri})
 
     async def _run() -> list:
-        client = xai_sdk.AsyncClient()
-        tasks = [
-            client.video.generate(prompt=prompt, **common) for prompt in args.prompt
-        ]
+        sem = asyncio.Semaphore(4)
+
+        async def _one(prompt: str):
+            async with sem:
+                async with xai_sdk.AsyncClient() as client:
+                    return await client.video.generate(prompt=prompt, **common)
+
+        tasks = [_one(p) for p in args.prompt]
         return await asyncio.gather(*tasks)
 
     print(f"Running {len(args.prompt)} concurrent video edit(s) — model={args.model}")
