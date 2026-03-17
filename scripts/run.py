@@ -117,6 +117,16 @@ def _encode_image(img_path: str) -> str:
     return img_path
 
 
+def _encode_video(video_path: str) -> str:
+    """Return a base64 data-URI for a local video file, or pass through as URL."""
+    p = Path(video_path)
+    if p.is_file():
+        mime = "video/mp4"  # assume mp4 for now
+        b64 = base64.b64encode(p.read_bytes()).decode()
+        return f"data:{mime};base64,{b64}"
+    return video_path
+
+
 def _save_response(response, stem: str, out_dir: Path) -> Path | None:
     """Save an image response to disk and return the written path.
 
@@ -390,8 +400,9 @@ def cmd_video_edit(args: argparse.Namespace) -> int:
     out_dir = _prepare_out_dir(args.out_dir)
     client = xai_sdk.Client()
 
+    video_uri = _encode_video(args.video)
     kwargs = _build_common_video_kwargs(
-        args, {"prompt": args.prompt, "video_url": args.video}
+        args, {"prompt": args.prompt, "video_url": video_uri}
     )
 
     print(f"Editing video — model={args.model}")
@@ -409,7 +420,8 @@ def cmd_video_concurrent(args: argparse.Namespace) -> int:
 
     out_dir = _prepare_out_dir(args.out_dir)
 
-    common = _build_common_video_kwargs(args, {"video_url": args.video})
+    video_uri = _encode_video(args.video)
+    common = _build_common_video_kwargs(args, {"video_url": video_uri})
 
     async def _run() -> list:
         client = xai_sdk.AsyncClient()
