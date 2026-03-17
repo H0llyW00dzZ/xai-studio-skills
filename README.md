@@ -74,6 +74,8 @@ venv/bin/python3 scripts/run.py concurrent --image photo.png --prompt "oil paint
 
 ### `multi-turn` — Iterative edit chaining
 
+> **Note:** Unlike `edit` (which accepts up to 3 images in a single call), `multi-turn` takes exactly **1 source image** but has **no hard limit on the number of `--prompt` steps**. Each step's output is automatically re-encoded and fed into the next step as input, so you can chain as many sequential edits as you need on a single image.
+
 ```bash
 # Each output feeds into the next edit
 venv/bin/python3 scripts/run.py multi-turn --image photo.png --prompt "Add dramatic clouds" --prompt "Make it a sunset" --prompt "Add lens flare"
