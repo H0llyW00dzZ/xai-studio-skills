@@ -94,7 +94,7 @@ venv/bin/python3 scripts/run.py multi-turn --image photo.png --prompt "Add drama
 
 ## Output
 
-Images are saved to `<out-dir>/<date>/<command>_<NNN>_<HHMMSS>.<ext>`, organized by date with descriptive filenames (e.g., `generate_001_143052.png`). The file extension is detected automatically from the image content (PNG, JPEG, WebP, GIF).
+Images are saved to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.<ext>`, organized by UTC date. The prefix reflects the subcommand: `generate`, `edit`, `style` (concurrent), or `step` (multi-turn). The file extension is detected automatically from image magic bytes (PNG, JPEG, WebP, GIF).
 
 ---
 
@@ -136,7 +136,7 @@ venv/bin/python3 scripts/run.py video-concurrent --video https://example.com/cli
 | `--timeout` | API default | all video | Max polling wait (seconds) |
 | `--poll-interval` | SDK default | all video | Seconds between status checks |
 
-Videos are saved as `.mp4` to `<out-dir>/<date>/<command>_<NNN>_<HHMMSS>.mp4` (e.g., `video_001_143052.mp4`).
+Videos are saved as `.mp4` to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.mp4`. The prefix reflects the subcommand: `video` (generate), `video_edit`, or `video_style` (concurrent).
 
 ## ClawHub
 
