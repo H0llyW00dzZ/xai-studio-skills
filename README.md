@@ -148,6 +148,11 @@ This skill is published on [ClawHub](https://clawhub.ai/H0llyW00dzZ/xai-studio).
 clawhub install xai-studio
 ```
 
+## TODO / Roadmap
+
+- [ ] **Make concurrency limit configurable** — the `asyncio.Semaphore` in `concurrent` and `video-concurrent` is currently hardcoded to **4** ([`run.py#L301`](scripts/run.py#L301), [`run.py#L451`](scripts/run.py#L451)). Should be exposed as a CLI flag (e.g. `--concurrency`). The current default of 4 should be sufficient for most workloads.
+- [ ] **Rewrite in Go for high performance** — the current Python implementation is experimental. Because the xAI SDK communicates over **gRPC** internally, a native Go rewrite (using Go's gRPC stack and goroutines) would yield significantly better throughput, lower latency, and first-class concurrency without the async-IO overhead.
+
 ## License
 
 [MIT-0](LICENSE)
