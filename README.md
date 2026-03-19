@@ -173,7 +173,7 @@ This skill uses `xai_sdk`, which communicates with the xAI API over **gRPC** rat
 | **Overhead per call** | Low — binary framing, header compression | Higher — text headers, content-type negotiation |
 | **Concurrent requests** | Multiplexed over a single TCP connection | Separate connections or limited keep-alive reuse |
 
-For the `concurrent` and `video-concurrent` subcommands — which fire multiple API calls in parallel — the gRPC multiplexing makes particularly good use of bandwidth. Large base64-encoded image payloads and video responses also benefit from Protocol Buffers' efficient binary encoding compared to JSON wrapping.
+For the `concurrent` and `video-concurrent` subcommands — which fire multiple API calls in parallel — the gRPC multiplexing makes particularly good use of bandwidth. Large image and video responses benefit from Protocol Buffers’ compact **binary encoding**, which avoids the JSON serialization and base64 overhead required in the REST/JSON path.
 
 > **Note:** While the Python implementation is experimental, the performance is already suitable for generating and editing images and videos in production-like workloads. A future [Go rewrite](#todo--roadmap) will unlock the full potential of gRPC with native goroutine concurrency.
 
