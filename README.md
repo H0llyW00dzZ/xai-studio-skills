@@ -1,4 +1,10 @@
-# 📽️ xai-studio
+# 📽️ xAI Studio
+
+<p align="center">
+  <img src="./assets/image/mascot-xai-studio.jpg" alt="Mascot xAI Studio" width="600">
+  <br>
+  <i>Image By Nano Banana 2 x Grok 4.20 (beta)</i>
+</p>
 
 xAI Studio — an [OpenClaw](https://openclaw.ai) skill for generating and editing images and videos via the xAI API. Supports text-to-image, batch generation, image editing, style transfers, multi-turn chaining, text-to-video, image-to-video, video editing, and concurrent processing — all from a single expandable CLI.
 
