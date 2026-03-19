@@ -150,16 +150,32 @@ Videos are saved as `.mp4` to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.mp
 
 ## Best Practices
 
-For the best results, pair this skill with an AI agent that has **image-reading (vision) tools**. Because xAI Studio supports the full creative pipeline — generation, editing, multi-turn refinement, and short video/cartoon clip creation — an agent that can *see* intermediate outputs can make smarter follow-up prompts, catch artifacts early, and iterate autonomously.
+For the best results, pair this skill with an AI agent that has **image-reading (vision) tools**. Because xAI Studio supports the full creative pipeline — generation, editing, multi-turn refinement, and video creation (e.g., short clips, cartoon films, and more) — an agent that can *see* intermediate outputs can make smarter follow-up prompts, catch artifacts early, and iterate autonomously.
 
 | Workflow | Why vision helps |
 |---|---|
 | **Generate → Edit** | The agent reads the generated image to craft a precise edit prompt instead of guessing. |
 | **Multi-turn chaining** | Each step's output is inspected before writing the next prompt, producing more coherent sequences. |
-| **Short clips / cartoon films** | The agent previews key frames and adjusts scene continuity across `video-generate` and `video-edit` calls. |
+| **Short clips / cartoon films** *(example)* | The agent previews key frames and adjusts scene continuity across `video-generate` and `video-edit` calls. |
 | **Concurrent style transfers** | Side-by-side comparison of style variants lets the agent pick the best candidate automatically. |
 
-> **Tip:** When building short cartoon films, combine `generate` (for key-frame stills) → `video-generate` (animate each still) → `video-edit` (refine transitions) in a pipeline. Vision-enabled agents can orchestrate this loop end-to-end.
+> **Tip — example workflow:** When building short cartoon films, combine `generate` (for key-frame stills) → `video-generate` (animate each still) → `video-edit` (refine transitions) in a pipeline. Vision-enabled agents can orchestrate this loop end-to-end. This is just one example — the same pattern applies to any multi-step creative project.
+
+## Performance
+
+This skill uses `xai_sdk`, which communicates with the xAI API over **gRPC** rather than traditional REST/JSON (HTTP). Even though the current Python implementation is **experimental**, the underlying transport already provides meaningful performance benefits for media-heavy workloads like image and video generation.
+
+| | gRPC (`xai_sdk`) | REST / JSON (HTTP) |
+|---|---|---|
+| **Serialization** | Protocol Buffers (binary) — compact and fast | JSON (text) — larger payloads, slower to parse |
+| **Connection** | HTTP/2 with multiplexed streams | Typically HTTP/1.1, one request per connection |
+| **Streaming** | Native bidirectional streaming | Requires polling or WebSocket workarounds |
+| **Overhead per call** | Low — binary framing, header compression | Higher — text headers, content-type negotiation |
+| **Concurrent requests** | Multiplexed over a single TCP connection | Separate connections or limited keep-alive reuse |
+
+For the `concurrent` and `video-concurrent` subcommands — which fire multiple API calls in parallel — the gRPC multiplexing makes particularly good use of bandwidth. Large base64-encoded image payloads and video responses also benefit from Protocol Buffers' efficient binary encoding compared to JSON wrapping.
+
+> **Note:** While the Python implementation is experimental, the performance is already suitable for generating and editing images and videos in production-like workloads. A future [Go rewrite](#todo--roadmap) will unlock the full potential of gRPC with native goroutine concurrency.
 
 ## ClawHub
 
