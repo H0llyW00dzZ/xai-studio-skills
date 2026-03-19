@@ -64,7 +64,7 @@ def _ensure_sdk() -> bool:
     if not SDK_AVAILABLE:
         print(
             "Error: xai_sdk is not installed.\n"
-            " → activate the venv first, or run: pip install xai-sdk",
+            " → activate the venv first, or run: pip3 install xai-sdk",
             file=sys.stderr,
         )
         return False
