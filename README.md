@@ -3,7 +3,9 @@
 <p align="center">
   <img src="./assets/image/mascot-xai-studio.jpg" alt="Mascot xAI Studio" width="600">
   <br>
-  <i>Image By Nano Banana 2 x Grok 4.20 (beta)</i>
+  <i>Image by Nano Banana 2 x Grok 4.20 (beta)</i>
+  <br>
+  <i>Entirely AI-generated — no human editing or post-processing applied.</i>
 </p>
 
 xAI Studio — an [OpenClaw](https://openclaw.ai) skill for generating and editing images and videos via the xAI API. Supports text-to-image, batch generation, image editing, style transfers, multi-turn chaining, text-to-video, image-to-video, video editing, and concurrent processing — all from a single expandable CLI.
@@ -145,6 +147,19 @@ venv/bin/python3 scripts/run.py video-concurrent --video https://example.com/cli
 | `--poll-interval` | SDK default | all video | Seconds between status checks |
 
 Videos are saved as `.mp4` to `<out-dir>/<YYYY-MM-DD>/<prefix>_<NNN>_<HHMMSS>.mp4`. The prefix reflects the subcommand: `video` (generate), `video_edit`, or `video_style` (concurrent).
+
+## Best Practices
+
+For the best results, pair this skill with an AI agent that has **image-reading (vision) tools**. Because xAI Studio supports the full creative pipeline — generation, editing, multi-turn refinement, and short video/cartoon clip creation — an agent that can *see* intermediate outputs can make smarter follow-up prompts, catch artifacts early, and iterate autonomously.
+
+| Workflow | Why vision helps |
+|---|---|
+| **Generate → Edit** | The agent reads the generated image to craft a precise edit prompt instead of guessing. |
+| **Multi-turn chaining** | Each step's output is inspected before writing the next prompt, producing more coherent sequences. |
+| **Short clips / cartoon films** | The agent previews key frames and adjusts scene continuity across `video-generate` and `video-edit` calls. |
+| **Concurrent style transfers** | Side-by-side comparison of style variants lets the agent pick the best candidate automatically. |
+
+> **Tip:** When building short cartoon films, combine `generate` (for key-frame stills) → `video-generate` (animate each still) → `video-edit` (refine transitions) in a pipeline. Vision-enabled agents can orchestrate this loop end-to-end.
 
 ## ClawHub
 
